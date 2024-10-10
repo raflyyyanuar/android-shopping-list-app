@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,8 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
 data class ShoppingItem(
@@ -51,6 +56,12 @@ fun ShoppingListApp() {
         Button(
             onClick = { openAddItemDialog.value = true },
             modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ButtonColors(
+                Color(255,163,26),
+                Color(27,27,27),
+                Color(255,163,26),
+                Color(27,27,27),
+            ),
         ) {
             Text("Add item")
         }
@@ -93,17 +104,20 @@ fun AddItemDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(275.dp)
                 .padding(16.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp),
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Adding item")
+                Text(
+                    "Add Shop Item",
+                    style = TextStyle(fontSize = 24.sp),
+                )
 
                 OutlinedTextField(
                     value = name,
@@ -121,7 +135,7 @@ fun AddItemDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TextButton(
+                    Button(
                         onClick = {
                             if(name.isEmpty() || quantity.isEmpty()) {
                                 Toast
@@ -131,7 +145,7 @@ fun AddItemDialog(
                                         Toast.LENGTH_SHORT)
                                     .show()
                             }
-                            else if(quantity.toIntOrNull() == null || quantity.toInt() <= 0 ) {
+                            else if((quantity.toIntOrNull() ?: 0) <= 0) {
                                 Toast
                                     .makeText(
                                         context,
@@ -144,12 +158,24 @@ fun AddItemDialog(
                             }
                         },
                         modifier = Modifier.padding(8.dp),
+                        colors = ButtonColors(
+                            Color(255,163,26),
+                            Color(27,27,27),
+                            Color(255,163,26),
+                            Color(27,27,27),
+                        )
                     ) {
                         Text("Add")
                     }
-                    TextButton(
+                    Button(
                         onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp),
+                        colors = ButtonColors(
+                            Color(27,27,27),
+                            Color(255,163,26),
+                            Color(27,27,27),
+                            Color(255,163,26),
+                        )
                     ) {
                         Text("Cancel")
                     }
