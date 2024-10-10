@@ -117,7 +117,7 @@ fun ShoppingListApp() {
 
 // Generic dialog to manipulate shopping list items
 @Composable
-fun AddDialog(
+fun ItemDialog(
     initialName : String = "",
     initialQuantity : String = "",
     onDismissRequest : () -> Unit,
@@ -208,7 +208,7 @@ fun AddItemDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: (String, Int) -> Unit,
 ) {
-    AddDialog(
+    ItemDialog(
         onDismissRequest = onDismissRequest,
         onConfirmation = onConfirmation,
         dialogText = "Add Shopping Item"
@@ -222,7 +222,7 @@ fun EditItemDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: (String, Int) -> Unit,
 ) {
-    AddDialog(
+    ItemDialog(
         initialName = initialName,
         initialQuantity = initialQuantity,
         onDismissRequest = onDismissRequest,
