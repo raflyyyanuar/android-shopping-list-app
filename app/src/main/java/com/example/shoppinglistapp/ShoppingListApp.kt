@@ -1,7 +1,7 @@
 package com.example.shoppinglistapp
 
-import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,15 +11,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,43 +39,50 @@ import androidx.compose.ui.window.Dialog
 
 data class ShoppingItem(
     val id : Int,
-    var name : String,
-    var quantity : Int,
-    var isEditing : Boolean = false,
+    var name : String = "Name",
+    var quantity : Int = 0,
 )
 
 @Composable
 fun ShoppingListApp() {
     val sItems = remember { mutableStateListOf<ShoppingItem>() }
     val openAddItemDialog = remember { mutableStateOf(false) }
+    val openEditItemDialog = remember { mutableStateOf(false) }
 
-//    sItems.add(ShoppingItem(0, "Flower", 1))
-//    sItems.add(ShoppingItem(1, "Lamborghini", 3))
-//    sItems.add(ShoppingItem(2, "Mouse", 7))
+    var editedItem by remember { mutableStateOf(ShoppingItem(-1)) }
+    var itemIdCounter by remember { mutableIntStateOf(0) }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
         verticalArrangement = Arrangement.Center,
     ) {
         Button(
             onClick = { openAddItemDialog.value = true },
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            colors = ButtonColors(
-                Color(255,163,26),
-                Color(27,27,27),
-                Color(255,163,26),
-                Color(27,27,27),
-            ),
         ) {
             Text("Add item")
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(sItems) { item ->
-                Text("${item.name} = ${item.quantity}")
+            items(sItems, key = { it.id }) { item ->
+                ShoppingListItem(
+                    item = item,
+                    onEditClick = {
+                        editedItem = item
+                        openEditItemDialog.value = true
+                    },
+                    onDeleteClick = {
+                        sItems.remove(item)
+                    }
+                )
             }
         }
     }
@@ -81,22 +92,40 @@ fun ShoppingListApp() {
             AddItemDialog(
                 onDismissRequest = { openAddItemDialog.value = false },
                 onConfirmation = { name, quantity ->
+                    sItems.add(ShoppingItem(itemIdCounter, name, quantity))
+                    itemIdCounter++
                     openAddItemDialog.value = false
-                    Log.d("INFO", "Added item $name with quantity $quantity")
-                    sItems.add(ShoppingItem(0, name, quantity))
+                },
+            )
+        }
+        openEditItemDialog.value -> {
+            EditItemDialog(
+                initialName = editedItem.name,
+                initialQuantity = editedItem.quantity.toString(),
+                onDismissRequest = { openEditItemDialog.value = false },
+                onConfirmation = { name, quantity ->
+                    val index = sItems.indexOfFirst { it.id == editedItem.id }
+                    if (index != -1) {
+                        sItems[index] = editedItem.copy(name = name, quantity = quantity)
+                    }
+                    openEditItemDialog.value = false
                 },
             )
         }
     }
 }
 
+// Generic dialog to manipulate shopping list items
 @Composable
-fun AddItemDialog(
-    onDismissRequest: () -> Unit,
-    onConfirmation: (String, Int) -> Unit,
+fun AddDialog(
+    initialName : String = "",
+    initialQuantity : String = "",
+    onDismissRequest : () -> Unit,
+    onConfirmation : (String, Int) -> Unit,
+    dialogText : String = "This is a Dialogue"
 ) {
-    var name by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(initialName) }
+    var quantity by remember { mutableStateOf(initialQuantity) }
 
     val context = LocalContext.current
 
@@ -115,8 +144,8 @@ fun AddItemDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    "Add Shop Item",
-                    style = TextStyle(fontSize = 24.sp),
+                    dialogText,
+                    style = TextStyle(fontSize = 16.sp, color = Color.Black),
                 )
 
                 OutlinedTextField(
@@ -158,28 +187,80 @@ fun AddItemDialog(
                             }
                         },
                         modifier = Modifier.padding(8.dp),
-                        colors = ButtonColors(
-                            Color(255,163,26),
-                            Color(27,27,27),
-                            Color(255,163,26),
-                            Color(27,27,27),
-                        )
                     ) {
-                        Text("Add")
+                        Text("OK")
                     }
                     Button(
                         onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp),
-                        colors = ButtonColors(
-                            Color(27,27,27),
-                            Color(255,163,26),
-                            Color(27,27,27),
-                            Color(255,163,26),
-                        )
                     ) {
                         Text("Cancel")
                     }
                 }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun AddItemDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: (String, Int) -> Unit,
+) {
+    AddDialog(
+        onDismissRequest = onDismissRequest,
+        onConfirmation = onConfirmation,
+        dialogText = "Add Shopping Item"
+    )
+}
+
+@Composable
+fun EditItemDialog(
+    initialName : String,
+    initialQuantity : String,
+    onDismissRequest: () -> Unit,
+    onConfirmation: (String, Int) -> Unit,
+) {
+    AddDialog(
+        initialName = initialName,
+        initialQuantity = initialQuantity,
+        onDismissRequest = onDismissRequest,
+        onConfirmation = onConfirmation,
+        dialogText = "Edit Shopping Item"
+    )
+}
+
+@Composable
+fun ShoppingListItem(
+    item : ShoppingItem,
+    onEditClick : () -> Unit,
+    onDeleteClick : () -> Unit,
+) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.Black, RoundedCornerShape(4.dp)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            item.name,
+            modifier = Modifier.padding(8.dp),
+        )
+        Text(
+            "Qty: ${item.quantity}",
+            modifier = Modifier.padding(8.dp),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            IconButton(onClick = onEditClick) {
+                Icon(Icons.Default.Edit, "Edit")
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(Icons.Default.Delete, "Delete")
             }
         }
     }
